@@ -1,235 +1,192 @@
+#include <wx/wxprec.h>
+#ifndef WX_PRECOMP
 #include <wx/wx.h>
-#include <vector>
-#include <cstdlib>
+#include <wx/event.h>
+#endif
+#include <wx/stattext.h>
+#include <wx/textctrl.h>
+#include <wx/button.h>
+#include <wx/sizer.h>
 #include <ctime>
-#include <map>
+#include <vector>
+#include <string>
+#include <iostream>
+using namespace std;
+
+class MainFrame;  // Forward declaration
+
+class CafeApp : public wxApp {
+public:
+    virtual bool OnInit();
+};
+bool CafeApp::OnInit() {
+    MainFrame* frame = new MainFrame("BAM Cafe Management System");
+    frame->Show(true);
+    return true;
+}
 
 class MainFrame : public wxFrame {
 public:
-    MainFrame();
+    MainFrame(const wxString& title);
 
 private:
-    // Menu selection items
-    wxButton* menuButton;
-    wxButton* placeOrderButton;
-    wxStaticText* totalBillText;
-    wxButton* playGameButton;
-    wxButton* exitButton;
-
-    // Prices and menu options
-    std::vector<std::pair<wxString, int>> menuItems;
-    int totalBill;
-    int attempts;
-    std::map<wxString, wxString> puzzleQuestions;
-    wxString currentAnswer;
-
-    void OnMenuClick(wxCommandEvent& event);
-    void OnItemSelect(wxCommandEvent& event);
-    void OnPlaceOrder(wxCommandEvent& event);
-    void OnGamePrompt(wxCommandEvent& event);
-    void OnPlayGame(wxCommandEvent& event);
+    // Event Handlers
+    void OnCustomerInfo(wxCommandEvent& event);
+    void OnGameOption(wxCommandEvent& event);
     void OnExit(wxCommandEvent& event);
-    void PuzzleGame(wxDialog* parentDialog);
 
-    wxDECLARE_EVENT_TABLE();
+    void RiddleGame();
+    void TeacherGuessGame();
+
+    wxPanel* panel;
+    wxBoxSizer* sizer;
+
+    DECLARE_EVENT_TABLE()
 };
 
-wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
-EVT_BUTTON(1001, MainFrame::OnMenuClick)
-EVT_BUTTON(2001, MainFrame::OnPlaceOrder)
-EVT_BUTTON(3001, MainFrame::OnPlayGame)
-EVT_BUTTON(3002, MainFrame::OnExit)
-wxEND_EVENT_TABLE()
+BEGIN_EVENT_TABLE(MainFrame, wxFrame)
+EVT_BUTTON(1001, MainFrame::OnCustomerInfo)
+EVT_BUTTON(1002, MainFrame::OnGameOption)
+EVT_BUTTON(1003, MainFrame::OnExit)
+END_EVENT_TABLE()
 
-class MyApp : public wxApp {
-public:
-    virtual bool OnInit() {
-        MainFrame* frame = new MainFrame();
-        frame->Show(true);
-        return true;
-    }
-};
 
-wxIMPLEMENT_APP(MyApp);
+IMPLEMENT_APP(CafeApp)
 
-MainFrame::MainFrame()
-    : wxFrame(nullptr, wxID_ANY, "Cafeteria Management System", wxDefaultPosition, wxSize(400, 300)) {
-
-    totalBill = 0;
-    attempts = 3;
-
-    // Initial menu options and prices
-    menuItems = { {"Coffee", 5}, {"Steak", 20}, {"Pasta", 15} };
-
-    // Puzzle questions and answers
-    puzzleQuestions = {
-        {"What is the shortcut key for copying text?", "ctrl+c"},
-        {"What does 'RAM' stand for?", "random access memory"},
-        {"What is the primary language used for web development?", "html"}
-    };
-
-    // Welcome message and button to go to menu
-    wxPanel* panel = new wxPanel(this, wxID_ANY);
-    wxStaticText* welcomeText = new wxStaticText(panel, wxID_ANY, "Welcome to BAM Cafe!", wxPoint(120, 20));
-    menuButton = new wxButton(panel, 1001, "Menu", wxPoint(150, 80), wxSize(100, 50));
+bool CafeApp::OnInit() {
+    MainFrame* frame = new MainFrame("BAM Cafe Management System");
+    frame->Show(true);
+    return true;
 }
 
-void MainFrame::OnMenuClick(wxCommandEvent& event) {
-    wxDialog* menuDialog = new wxDialog(this, wxID_ANY, "Menu", wxDefaultPosition, wxSize(300, 300));
+MainFrame::MainFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(500, 400)) {
+    panel = new wxPanel(this, wxID_ANY);
+    sizer = new wxBoxSizer(wxVERTICAL);
 
-    wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+    // Welcome Message
+    wxStaticText* welcomeText = new wxStaticText(panel, wxID_ANY, "Welcome to BAM Cafe Management System", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
+    sizer->Add(welcomeText, 0, wxALL | wxEXPAND | wxALIGN_CENTER, 10);
 
-    // Create buttons for each menu item
-    for (size_t i = 0; i < menuItems.size(); ++i) {
-        wxButton* itemButton = new wxButton(menuDialog, wxID_HIGHEST + i, menuItems[i].first + " - $" + std::to_string(menuItems[i].second));
-        sizer->Add(itemButton, 0, wxALL | wxEXPAND, 5);
-        itemButton->Bind(wxEVT_BUTTON, &MainFrame::OnItemSelect, this);
-    }
+    // Buttons
+    wxButton* customerInfoButton = new wxButton(panel, 1001, "Customer Information");
+    wxButton* gameOptionButton = new wxButton(panel, 1002, "Game Options");
+    wxButton* exitButton = new wxButton(panel, 1003, "Exit");
 
-    // Fix Place Order button
-    placeOrderButton = new wxButton(menuDialog, 2001, "Place Order", wxDefaultPosition, wxSize(100, 30));
-    placeOrderButton->Bind(wxEVT_BUTTON, &MainFrame::OnPlaceOrder, this);  // Bind properly
-    sizer->Add(placeOrderButton, 0, wxALL | wxALIGN_CENTER, 10);
+    sizer->Add(customerInfoButton, 0, wxALL | wxEXPAND | wxALIGN_CENTER, 5);
+    sizer->Add(gameOptionButton, 0, wxALL | wxEXPAND | wxALIGN_CENTER, 5);
+    sizer->Add(exitButton, 0, wxALL | wxEXPAND | wxALIGN_CENTER, 5);
 
-    menuDialog->SetSizer(sizer);
-    menuDialog->ShowModal();
+    panel->SetSizer(sizer);
 }
 
-void MainFrame::OnItemSelect(wxCommandEvent& event) {
-    int id = event.GetId() - wxID_HIGHEST;
-    if (id >= 0 && id < (int)menuItems.size()) {
-        totalBill += menuItems[id].second;
-        wxMessageBox(menuItems[id].first + " added to your order.", "Item Selected", wxOK | wxICON_INFORMATION);
+void MainFrame::OnCustomerInfo(wxCommandEvent& event) {
+    wxTextEntryDialog dialog(this, "Enter Customer Name:", "Customer Information");
+    if (dialog.ShowModal() == wxID_OK) {
+        wxString name = dialog.GetValue();
+        wxMessageBox("Thank you, " + name + "!", "Information Received", wxOK | wxICON_INFORMATION);
     }
 }
 
-void MainFrame::OnPlaceOrder(wxCommandEvent& event) {
-    wxMessageBox("Your total bill is $" + std::to_string(totalBill) + ".\nYour order will take 45 minutes.",
-        "Order Placed", wxOK | wxICON_INFORMATION);
+void MainFrame::OnGameOption(wxCommandEvent& event) {
+    wxArrayString games;
+    games.Add("Riddle Game");
+    games.Add("Guess the Teacher");
 
-    // New dialog for user information
-    wxDialog* userInfoDialog = new wxDialog(this, wxID_ANY, "Enter Your Information", wxDefaultPosition, wxSize(300, 400));
-    wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-
-    // Name input
-    wxStaticText* nameLabel = new wxStaticText(userInfoDialog, wxID_ANY, "Enter your name:", wxDefaultPosition, wxDefaultSize);
-    wxTextCtrl* nameInput = new wxTextCtrl(userInfoDialog, wxID_ANY, "", wxDefaultPosition, wxSize(200, 25));
-    sizer->Add(nameLabel, 0, wxALL | wxALIGN_LEFT, 10);
-    sizer->Add(nameInput, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-
-    // Email input (optional)
-    wxStaticText* emailLabel = new wxStaticText(userInfoDialog, wxID_ANY, "Enter your email:", wxDefaultPosition, wxDefaultSize);
-    wxTextCtrl* emailInput = new wxTextCtrl(userInfoDialog, wxID_ANY, "", wxDefaultPosition, wxSize(200, 25));
-    sizer->Add(emailLabel, 0, wxALL | wxALIGN_LEFT, 10);
-    sizer->Add(emailInput, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-
-    // Phone number input (optional)
-    wxStaticText* phoneLabel = new wxStaticText(userInfoDialog, wxID_ANY, "Enter your phone number:", wxDefaultPosition, wxDefaultSize);
-    wxTextCtrl* phoneInput = new wxTextCtrl(userInfoDialog, wxID_ANY, "", wxDefaultPosition, wxSize(200, 25));
-    sizer->Add(phoneLabel, 0, wxALL | wxALIGN_LEFT, 10);
-    sizer->Add(phoneInput, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-
-    // Address input
-    wxStaticText* addressLabel = new wxStaticText(userInfoDialog, wxID_ANY, "Enter your address:", wxDefaultPosition, wxDefaultSize);
-    wxTextCtrl* addressInput = new wxTextCtrl(userInfoDialog, wxID_ANY, "", wxDefaultPosition, wxSize(200, 50), wxTE_MULTILINE); // Multiline for address
-    sizer->Add(addressLabel, 0, wxALL | wxALIGN_LEFT, 10);
-    sizer->Add(addressInput, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-
-    // Submit button
-    wxButton* submitButton = new wxButton(userInfoDialog, wxID_OK, "Submit", wxDefaultPosition, wxSize(100, 30));
-    sizer->Add(submitButton, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 10);
-
-    submitButton->Bind(wxEVT_BUTTON, [=](wxCommandEvent&) {
-        // Retrieve user input
-        wxString name = nameInput->GetValue();
-        wxString email = emailInput->GetValue();
-        wxString phone = phoneInput->GetValue();
-        wxString address = addressInput->GetValue();
-
-        // Process the user's information (currently just shown in a message box)
-        wxMessageBox("Thank you, " + name + ". Your order is confirmed.\nEmail: " + email + "\nPhone: " + phone + "\nAddress: " + address,
-            "Information Submitted", wxOK | wxICON_INFORMATION);
-
-        userInfoDialog->Destroy(); // Close the dialog after submission
-
-        // Now ask if the user wants to play the game
-        wxDialog* promptDialog = new wxDialog(this, wxID_ANY, "Play a Game?", wxDefaultPosition, wxSize(300, 200));
-        wxBoxSizer* promptSizer = new wxBoxSizer(wxVERTICAL);
-
-        wxStaticText* promptText = new wxStaticText(promptDialog, wxID_ANY, "Would you like to play a game while waiting?", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
-        promptSizer->Add(promptText, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 10);
-
-        playGameButton = new wxButton(promptDialog, 3001, "Yes, Play Game", wxDefaultPosition, wxSize(120, 30));
-        exitButton = new wxButton(promptDialog, 3002, "No, Exit", wxDefaultPosition, wxSize(120, 30));
-
-        promptSizer->Add(playGameButton, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-        promptSizer->Add(exitButton, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-
-        // Bind the buttons to their respective handlers
-        playGameButton->Bind(wxEVT_BUTTON, &MainFrame::OnPlayGame, this);
-        exitButton->Bind(wxEVT_BUTTON, &MainFrame::OnExit, this);
-
-        promptDialog->SetSizer(promptSizer);
-        promptDialog->ShowModal();
-        });
-
-    // Set the sizer and show the dialog
-    userInfoDialog->SetSizer(sizer);
-    userInfoDialog->Layout();
-    userInfoDialog->ShowModal();
-}
-
-void MainFrame::OnGamePrompt(wxCommandEvent& event) {
-    wxDialog* puzzleDialog = new wxDialog(this, wxID_ANY, "Puzzle Game", wxDefaultPosition, wxSize(400, 300));
-    PuzzleGame(puzzleDialog);
-    puzzleDialog->ShowModal();
-}
-
-void MainFrame::OnPlayGame(wxCommandEvent& event) {
-    wxDialog* puzzleDialog = new wxDialog(this, wxID_ANY, "Puzzle Game", wxDefaultPosition, wxSize(400, 300));
-    PuzzleGame(puzzleDialog);
-    puzzleDialog->ShowModal();
+    wxSingleChoiceDialog gameDialog(this, "Choose a game to play:", "Game Options", games);
+    if (gameDialog.ShowModal() == wxID_OK) {
+        wxString selectedGame = gameDialog.GetStringSelection();
+        if (selectedGame == "Riddle Game") {
+            RiddleGame();
+        }
+        else if (selectedGame == "Guess the Teacher") {
+            TeacherGuessGame();
+        }
+    }
 }
 
 void MainFrame::OnExit(wxCommandEvent& event) {
-    wxMessageBox("Thank you for ordering from BAM Cafe!", "Goodbye", wxOK | wxICON_INFORMATION);
-    Close();
+    Close(true);
 }
 
-void MainFrame::PuzzleGame(wxDialog* parentDialog) {
-    wxPanel* panel = new wxPanel(parentDialog, wxID_ANY);
-    wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+void MainFrame::RiddleGame() {
+    struct Riddle {
+        wxString question;
+        wxString answer;
+    };
 
-    auto it = puzzleQuestions.begin();
-    std::advance(it, rand() % puzzleQuestions.size());
-    wxString question = it->first;
-    currentAnswer = it->second;
+    std::vector<Riddle> riddles = {
+        {"What has to be broken before you can use it?", "egg"},
+        {"I speak without a mouth and hear without ears. What am I?", "echo"},
+        {"The more of me you take, the more you leave behind. What am I?", "footsteps"}
+    };
 
-    wxStaticText* questionText = new wxStaticText(panel, wxID_ANY, question, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
-    wxTextCtrl* answerInput = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxSize(200, 25));
-    wxButton* submitButton = new wxButton(panel, wxID_ANY, "Submit", wxDefaultPosition, wxSize(100, 30));
+    srand(static_cast<unsigned>(time(nullptr)));
+    Riddle currentRiddle = riddles[rand() % riddles.size()];
 
-    sizer->Add(questionText, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 10);
-    sizer->Add(answerInput, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-    sizer->Add(submitButton, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+    wxString userAnswer;
+    int attempts = 3;
 
-    panel->SetSizer(sizer);
+    while (attempts > 0) {
+        userAnswer = wxGetTextFromUser(currentRiddle.question + "\n\nAttempts left: " + std::to_string(attempts), "Riddle Game");
 
-    submitButton->Bind(wxEVT_BUTTON, [=](wxCommandEvent&) {
-        wxString userAnswer = answerInput->GetValue().Lower();
-        if (userAnswer == currentAnswer) {
-            wxMessageBox("Correct! Enjoy your time!", "Success", wxOK | wxICON_INFORMATION);
-            parentDialog->Destroy();
+        if (userAnswer.IsEmpty()) {
+            wxMessageBox("Game cancelled!", "Riddle Game", wxOK | wxICON_INFORMATION);
+            return;
+        }
+
+        if (userAnswer.CmpNoCase(currentRiddle.answer) == 0) {
+            wxMessageBox("Correct! You solved the riddle!", "Riddle Game", wxOK | wxICON_INFORMATION);
+            return;
+        }
+        else {
+            attempts--;
+            wxMessageBox("Incorrect! Try again.", "Riddle Game", wxOK | wxICON_WARNING);
+        }
+    }
+
+    wxMessageBox("Out of attempts! The answer was: " + currentRiddle.answer, "Riddle Game", wxOK | wxICON_INFORMATION);
+}
+
+void MainFrame::TeacherGuessGame() {
+    struct Teacher {
+        wxString clue;
+        wxString name;
+    };
+
+    std::vector<Teacher> teachers = {
+        {"Teaches Physics and loves astronomy.", "Dr. Newton"},
+        {"Expert in Mathematics and calculus.", "Ms. Euler"},
+        {"Computer Science enthusiast with a knack for coding.", "Mr. Turing"}
+    };
+
+    srand(static_cast<unsigned>(time(nullptr)));
+    Teacher currentTeacher = teachers[rand() % teachers.size()];
+    wxString userGuess;
+    int attempts = 3;
+
+    while (attempts > 0) {
+        userGuess = wxGetTextFromUser("Clue: " + currentTeacher.clue +
+            "\n\nWho am I? (Attempts left: " + wxString::Format("%d", attempts) + ")",
+            "Guess the Teacher");
+
+        if (userGuess.IsEmpty()) {
+            wxMessageBox("Game cancelled!", "Guess the Teacher", wxOK | wxICON_INFORMATION);
+            return;
+        }
+
+        if (userGuess.CmpNoCase(currentTeacher.name) == 0) {
+            wxMessageBox("Correct! The teacher is " + currentTeacher.name + "!",
+                "Congratulations", wxOK | wxICON_INFORMATION);
+            return;
         }
         else {
             attempts--;
             if (attempts > 0) {
-                wxMessageBox("Incorrect. Try again. Attempts left: " + std::to_string(attempts), "Try Again", wxOK | wxICON_WARNING);
-            }
-            else {
-                wxMessageBox("Out of attempts! Better luck next time!", "Game Over", wxOK | wxICON_ERROR);
-                parentDialog->Destroy();
+                wxMessageBox("Incorrect! Try again.", "Wrong Answer", wxOK | wxICON_WARNING);
             }
         }
-        });
+    }
+
+    wxMessageBox("Out of attempts! The teacher was: " + currentTeacher.name,
+        "Game Over", wxOK | wxICON_INFORMATION);
 }
