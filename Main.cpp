@@ -77,17 +77,20 @@ MainFrame::MainFrame()
 void MainFrame::OnMenuClick(wxCommandEvent& event) {
     wxDialog* menuDialog = new wxDialog(this, wxID_ANY, "Menu", wxDefaultPosition, wxSize(300, 300));
 
-    // Create buttons for each menu item
     wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+
+    // Create buttons for each menu item
     for (size_t i = 0; i < menuItems.size(); ++i) {
         wxButton* itemButton = new wxButton(menuDialog, wxID_HIGHEST + i, menuItems[i].first + " - $" + std::to_string(menuItems[i].second));
         sizer->Add(itemButton, 0, wxALL | wxEXPAND, 5);
         itemButton->Bind(wxEVT_BUTTON, &MainFrame::OnItemSelect, this);
     }
 
-    // Place order button
+    // Fix Place Order button
     placeOrderButton = new wxButton(menuDialog, 2001, "Place Order", wxDefaultPosition, wxSize(100, 30));
+    placeOrderButton->Bind(wxEVT_BUTTON, &MainFrame::OnPlaceOrder, this);  // Bind properly
     sizer->Add(placeOrderButton, 0, wxALL | wxALIGN_CENTER, 10);
+
     menuDialog->SetSizer(sizer);
     menuDialog->ShowModal();
 }
@@ -115,6 +118,10 @@ void MainFrame::OnPlaceOrder(wxCommandEvent& event) {
 
     sizer->Add(playGameButton, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
     sizer->Add(exitButton, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+
+    // Bind the buttons to their respective handlers
+    playGameButton->Bind(wxEVT_BUTTON, &MainFrame::OnPlayGame, this);
+    exitButton->Bind(wxEVT_BUTTON, &MainFrame::OnExit, this);
 
     promptDialog->SetSizer(sizer);
     promptDialog->ShowModal();
