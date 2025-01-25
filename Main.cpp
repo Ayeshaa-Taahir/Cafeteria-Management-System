@@ -1,3 +1,11 @@
+#if defined(_MSC_VER)
+#pragma warning(disable: 28251)
+#endif
+
+#include <wx/wxprec.h>
+#ifndef WX_PRECOMP
+#include <wx/wx.h>
+#endif
 #ifdef _MSC_VER
 #pragma warning(suppress: 28251)
 #endif
@@ -7,6 +15,7 @@
 #include <wx/event.h>
 #endif
 #include <wx/stattext.h>
+#include "pch.h"
 #include <wx/textctrl.h>
 #include <wx/button.h>
 #include <wx/sizer.h>
@@ -15,7 +24,8 @@
 #include <string>
 #include <iostream>
 using namespace std;
-
+#define WXUSINGDLL
+#define wxMSVC_VERSION_AUTO
 class MainFrame;  // Forward declaration
 
 class CafeApp : public wxApp {
