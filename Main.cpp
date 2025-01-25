@@ -1,3 +1,6 @@
+#ifdef _MSC_VER
+#pragma warning(suppress: 28251)
+#endif
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
 #include <wx/wx.h>
@@ -154,9 +157,9 @@ void MainFrame::TeacherGuessGame() {
     };
 
     std::vector<Teacher> teachers = {
-        {"Teaches Physics and loves astronomy.", "Dr. Newton"},
-        {"Expert in Mathematics and calculus.", "Ms. Euler"},
-        {"Computer Science enthusiast with a knack for coding.", "Mr. Turing"}
+        {"Teaches Programming Fundamentals and makes it fun.", "Sir Mansoor"},
+        {"Expert in Object Oriented Programming and loves to challenge students.", "Sir Farzeen"},
+        {"Artificial Intelligence enthusiast with a passion for machine learning.", "Dr Rizwan"}
     };
 
     srand(static_cast<unsigned>(time(nullptr)));
