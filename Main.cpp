@@ -107,24 +107,76 @@ void MainFrame::OnPlaceOrder(wxCommandEvent& event) {
     wxMessageBox("Your total bill is $" + std::to_string(totalBill) + ".\nYour order will take 45 minutes.",
         "Order Placed", wxOK | wxICON_INFORMATION);
 
-    wxDialog* promptDialog = new wxDialog(this, wxID_ANY, "Play a Game?", wxDefaultPosition, wxSize(300, 200));
+    // New dialog for user information
+    wxDialog* userInfoDialog = new wxDialog(this, wxID_ANY, "Enter Your Information", wxDefaultPosition, wxSize(300, 400));
     wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 
-    wxStaticText* promptText = new wxStaticText(promptDialog, wxID_ANY, "Would you like to play a game while waiting?", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
-    sizer->Add(promptText, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 10);
+    // Name input
+    wxStaticText* nameLabel = new wxStaticText(userInfoDialog, wxID_ANY, "Enter your name:", wxDefaultPosition, wxDefaultSize);
+    wxTextCtrl* nameInput = new wxTextCtrl(userInfoDialog, wxID_ANY, "", wxDefaultPosition, wxSize(200, 25));
+    sizer->Add(nameLabel, 0, wxALL | wxALIGN_LEFT, 10);
+    sizer->Add(nameInput, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
 
-    playGameButton = new wxButton(promptDialog, 3001, "Yes, Play Game", wxDefaultPosition, wxSize(120, 30));
-    exitButton = new wxButton(promptDialog, 3002, "No, Exit", wxDefaultPosition, wxSize(120, 30));
+    // Email input (optional)
+    wxStaticText* emailLabel = new wxStaticText(userInfoDialog, wxID_ANY, "Enter your email:", wxDefaultPosition, wxDefaultSize);
+    wxTextCtrl* emailInput = new wxTextCtrl(userInfoDialog, wxID_ANY, "", wxDefaultPosition, wxSize(200, 25));
+    sizer->Add(emailLabel, 0, wxALL | wxALIGN_LEFT, 10);
+    sizer->Add(emailInput, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
 
-    sizer->Add(playGameButton, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-    sizer->Add(exitButton, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+    // Phone number input (optional)
+    wxStaticText* phoneLabel = new wxStaticText(userInfoDialog, wxID_ANY, "Enter your phone number:", wxDefaultPosition, wxDefaultSize);
+    wxTextCtrl* phoneInput = new wxTextCtrl(userInfoDialog, wxID_ANY, "", wxDefaultPosition, wxSize(200, 25));
+    sizer->Add(phoneLabel, 0, wxALL | wxALIGN_LEFT, 10);
+    sizer->Add(phoneInput, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
 
-    // Bind the buttons to their respective handlers
-    playGameButton->Bind(wxEVT_BUTTON, &MainFrame::OnPlayGame, this);
-    exitButton->Bind(wxEVT_BUTTON, &MainFrame::OnExit, this);
+    // Address input
+    wxStaticText* addressLabel = new wxStaticText(userInfoDialog, wxID_ANY, "Enter your address:", wxDefaultPosition, wxDefaultSize);
+    wxTextCtrl* addressInput = new wxTextCtrl(userInfoDialog, wxID_ANY, "", wxDefaultPosition, wxSize(200, 50), wxTE_MULTILINE); // Multiline for address
+    sizer->Add(addressLabel, 0, wxALL | wxALIGN_LEFT, 10);
+    sizer->Add(addressInput, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
 
-    promptDialog->SetSizer(sizer);
-    promptDialog->ShowModal();
+    // Submit button
+    wxButton* submitButton = new wxButton(userInfoDialog, wxID_OK, "Submit", wxDefaultPosition, wxSize(100, 30));
+    sizer->Add(submitButton, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 10);
+
+    submitButton->Bind(wxEVT_BUTTON, [=](wxCommandEvent&) {
+        // Retrieve user input
+        wxString name = nameInput->GetValue();
+        wxString email = emailInput->GetValue();
+        wxString phone = phoneInput->GetValue();
+        wxString address = addressInput->GetValue();
+
+        // Process the user's information (currently just shown in a message box)
+        wxMessageBox("Thank you, " + name + ". Your order is confirmed.\nEmail: " + email + "\nPhone: " + phone + "\nAddress: " + address,
+            "Information Submitted", wxOK | wxICON_INFORMATION);
+
+        userInfoDialog->Destroy(); // Close the dialog after submission
+
+        // Now ask if the user wants to play the game
+        wxDialog* promptDialog = new wxDialog(this, wxID_ANY, "Play a Game?", wxDefaultPosition, wxSize(300, 200));
+        wxBoxSizer* promptSizer = new wxBoxSizer(wxVERTICAL);
+
+        wxStaticText* promptText = new wxStaticText(promptDialog, wxID_ANY, "Would you like to play a game while waiting?", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
+        promptSizer->Add(promptText, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 10);
+
+        playGameButton = new wxButton(promptDialog, 3001, "Yes, Play Game", wxDefaultPosition, wxSize(120, 30));
+        exitButton = new wxButton(promptDialog, 3002, "No, Exit", wxDefaultPosition, wxSize(120, 30));
+
+        promptSizer->Add(playGameButton, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+        promptSizer->Add(exitButton, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+
+        // Bind the buttons to their respective handlers
+        playGameButton->Bind(wxEVT_BUTTON, &MainFrame::OnPlayGame, this);
+        exitButton->Bind(wxEVT_BUTTON, &MainFrame::OnExit, this);
+
+        promptDialog->SetSizer(promptSizer);
+        promptDialog->ShowModal();
+        });
+
+    // Set the sizer and show the dialog
+    userInfoDialog->SetSizer(sizer);
+    userInfoDialog->Layout();
+    userInfoDialog->ShowModal();
 }
 
 void MainFrame::OnGamePrompt(wxCommandEvent& event) {
